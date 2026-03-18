@@ -1,0 +1,784 @@
+@ -0,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSMOS — A Field Guide to the Universe</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0b0915;--paper:#f4f0e8;--glow:#c4b5fd;--gold:#fbbf24;--teal:#34d399;--rose:#f472b6;
+  --dim:rgba(244,240,232,0.45);--dimmer:rgba(244,240,232,0.2);--border:rgba(244,240,232,0.12);
+  --serif:'Cormorant Garamond',Georgia,serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--paper);font-family:var(--serif);overflow-x:hidden;cursor:none}
+
+/* Custom cursor */
+#cursor{position:fixed;width:8px;height:8px;background:var(--glow);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,width .2s,height .2s;mix-blend-mode:screen}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(196,181,253,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .08s linear,width .25s,height .25s;mix-blend-mode:screen}
+body:hover #cursor{opacity:1}
+
+/* Galaxy canvas */
+#gc{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* Scroll progress */
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--glow),var(--gold));z-index:200;width:0%;transition:width .1s}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3rem;backdrop-filter:blur(16px);border-bottom:1px solid var(--border);background:rgba(11,9,21,0.6)}
+.nav-logo{font-family:var(--mono);font-size:.8rem;letter-spacing:.25em;color:var(--glow);text-transform:uppercase;display:flex;align-items:center;gap:.6rem}
+.nav-logo::before{content:'✦';font-size:.7rem;animation:spin 8s linear infinite}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--dim);text-decoration:none;text-transform:uppercase;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--glow);transform:scaleX(0);transition:transform .3s;transform-origin:left}
+.nav-links a:hover{color:var(--paper)}
+.nav-links a:hover::after{transform:scaleX(1)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative;z-index:1}
+.hero-tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--glow);margin-bottom:2rem;opacity:0;animation:riseIn .9s .4s forwards}
+.hero-title{font-size:clamp(4rem,13vw,11rem);font-weight:300;line-height:.9;letter-spacing:-.03em;margin-bottom:2rem;opacity:0;animation:riseIn 1s .6s forwards}
+.hero-title .word1{display:block}
+.hero-title .word2{display:block;font-style:italic;color:var(--glow)}
+.hero-desc{font-size:clamp(.95rem,2vw,1.25rem);font-weight:300;color:var(--dim);max-width:560px;line-height:1.75;margin-bottom:3.5rem;opacity:0;animation:riseIn .9s .8s forwards}
+.hero-scroll{display:flex;flex-direction:column;align-items:center;gap:.7rem;opacity:0;animation:riseIn .9s 1.2s forwards}
+.hero-scroll span{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dimmer)}
+.scroll-beam{width:1px;height:60px;background:linear-gradient(to bottom,var(--glow),transparent);animation:beam 2.2s ease-in-out infinite}
+
+/* Big number accent */
+.counter-strip{position:relative;z-index:1;display:flex;justify-content:center;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden}
+.count-item{flex:1;padding:2.5rem 2rem;text-align:center;border-right:1px solid var(--border);position:relative;overflow:hidden;transition:background .4s}
+.count-item:last-child{border-right:none}
+.count-item:hover{background:rgba(196,181,253,0.04)}
+.count-item::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 100%,rgba(196,181,253,0.08),transparent 70%);opacity:0;transition:opacity .4s}
+.count-item:hover::before{opacity:1}
+.count-num{font-size:clamp(2.5rem,5vw,4rem);font-weight:300;line-height:1;color:var(--paper);margin-bottom:.5rem}
+.count-num em{font-style:italic;color:var(--glow)}
+.count-sub{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+
+/* SECTION BASE */
+.section{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:7rem 3rem}
+.sec-header{margin-bottom:5rem}
+.sec-label{font-family:var(--mono);font-size:.65rem;letter-spacing:.28em;text-transform:uppercase;color:var(--glow);margin-bottom:1.2rem;display:flex;align-items:center;gap:.8rem}
+.sec-label::before{content:'';display:block;width:28px;height:1px;background:var(--glow)}
+.sec-title{font-size:clamp(2.2rem,5vw,4rem);font-weight:300;line-height:1.1;letter-spacing:-.02em}
+.sec-title em{font-style:italic;color:var(--glow)}
+
+/* GALAXY CARDS */
+.galaxy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-bottom:2px}
+.galaxy-card{position:relative;overflow:hidden;padding:2.5rem;background:rgba(244,240,232,0.02);border:1px solid var(--border);transition:background .4s,border-color .4s;cursor:default}
+.galaxy-card:hover{background:rgba(244,240,232,0.05);border-color:rgba(196,181,253,0.25)}
+.galaxy-card::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(196,181,253,0.08),transparent 60%);opacity:0;transition:opacity .3s}
+.galaxy-card:hover::before{opacity:1}
+.card-num{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;color:var(--glow);margin-bottom:1.5rem;opacity:.7}
+.card-glyph{font-size:2.5rem;margin-bottom:1rem;display:block;line-height:1;filter:drop-shadow(0 0 12px var(--glow))}
+.card-title{font-size:1.7rem;font-weight:300;letter-spacing:-.01em;margin-bottom:.8rem}
+.card-body{font-size:.92rem;color:var(--dim);line-height:1.75;font-weight:300}
+.card-source{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:rgba(196,181,253,0.45);margin-top:1rem;display:block}
+.card-source a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(196,181,253,0.2);transition:border-color .2s}
+.card-source a:hover{border-color:var(--glow);color:var(--glow)}
+
+/* Full-width card variant */
+.galaxy-card.wide{grid-column:1/-1}
+.galaxy-card.accent{border-color:rgba(196,181,253,0.2);background:rgba(196,181,253,0.03)}
+
+/* CONSTELLATION SECTION */
+.const-layout{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start}
+.const-list{display:flex;flex-direction:column;gap:0}
+.const-item{display:grid;grid-template-columns:48px 1fr;gap:1.2rem;align-items:start;padding:1.8rem 0;border-bottom:1px solid var(--border);position:relative;overflow:hidden;cursor:default;transition:background .3s}
+.const-item::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--glow);transform:scaleY(0);transition:transform .3s;transform-origin:bottom}
+.const-item:hover::after{transform:scaleY(1)}
+.const-item:hover{background:rgba(196,181,253,0.03)}
+.const-num{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--glow);padding-top:.3rem}
+.const-name{font-size:1.4rem;font-weight:300;margin-bottom:.4rem;letter-spacing:-.01em}
+.const-name em{font-style:italic;color:var(--dim);font-size:1rem}
+.const-fact{font-size:.88rem;color:var(--dim);line-height:1.65}
+.const-source{font-family:var(--mono);font-size:.58rem;color:rgba(196,181,253,0.4);margin-top:.4rem;display:block}
+
+/* Star map canvas */
+.starmap-wrap{position:sticky;top:7rem;border:1px solid var(--border);padding:2rem;background:rgba(244,240,232,0.02)}
+.starmap-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:1rem;text-align:center}
+#starmap{width:100%;aspect-ratio:1;display:block}
+
+/* NEBULAE SECTION */
+.neb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.neb-card{position:relative;border:1px solid var(--border);padding:2rem;transition:all .35s;overflow:hidden}
+.neb-card::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s}
+.neb-card:hover::before{opacity:1}
+.neb-card.em::before{background:radial-gradient(ellipse at 50% 0%,rgba(244,114,182,0.08),transparent 70%)}
+.neb-card.ref::before{background:radial-gradient(ellipse at 50% 0%,rgba(96,165,250,0.08),transparent 70%)}
+.neb-card.sup::before{background:radial-gradient(ellipse at 50% 0%,rgba(52,211,153,0.08),transparent 70%)}
+.neb-card.plan::before{background:radial-gradient(ellipse at 50% 0%,rgba(251,191,36,0.08),transparent 70%)}
+.neb-card:hover{border-color:rgba(196,181,253,0.2);transform:translateY(-4px)}
+.neb-type{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:.8rem;padding:.3rem .7rem;display:inline-block;border-radius:1px}
+.neb-card.em .neb-type{color:var(--rose);border:1px solid rgba(244,114,182,0.3);background:rgba(244,114,182,0.07)}
+.neb-card.ref .neb-type{color:#60a5fa;border:1px solid rgba(96,165,250,0.3);background:rgba(96,165,250,0.07)}
+.neb-card.sup .neb-type{color:var(--teal);border:1px solid rgba(52,211,153,0.3);background:rgba(52,211,153,0.07)}
+.neb-card.plan .neb-type{color:var(--gold);border:1px solid rgba(251,191,36,0.3);background:rgba(251,191,36,0.07)}
+.neb-name{font-size:1.3rem;font-weight:300;margin-bottom:.7rem}
+.neb-body{font-size:.88rem;color:var(--dim);line-height:1.7}
+.neb-source{font-family:var(--mono);font-size:.58rem;color:rgba(196,181,253,0.38);margin-top:.8rem;display:block}
+.neb-source a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;transition:.2s}
+.neb-source a:hover{color:var(--glow);border-bottom-color:var(--glow)}
+
+/* PHENOMENA */
+.phenom-row{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-bottom:4rem;align-items:center}
+.phenom-row:nth-child(even){direction:rtl}
+.phenom-row:nth-child(even)>*{direction:ltr}
+.phenom-art{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);overflow:hidden}
+.phenom-canvas{width:100%;height:100%;display:block}
+.phenom-text{}
+.phenom-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--glow);margin-bottom:.8rem}
+.phenom-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:300;letter-spacing:-.02em;margin-bottom:1rem;line-height:1.1}
+.phenom-title em{font-style:italic}
+.phenom-body{font-size:.95rem;color:var(--dim);line-height:1.8}
+.phenom-source{font-family:var(--mono);font-size:.58rem;color:rgba(196,181,253,0.38);margin-top:1rem;display:block}
+.phenom-source a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;transition:.2s}
+.phenom-source a:hover{color:var(--glow);border-bottom-color:var(--glow)}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3rem;text-align:center}
+.footer-star{font-size:1.5rem;display:block;margin-bottom:1rem;animation:spin 12s linear infinite;filter:drop-shadow(0 0 8px var(--glow))}
+footer p{font-family:var(--mono);font-size:.65rem;letter-spacing:.15em;color:var(--dimmer);line-height:2}
+footer a{color:rgba(196,181,253,0.5);text-decoration:none;border-bottom:1px solid transparent;transition:.2s}
+footer a:hover{color:var(--glow);border-bottom-color:var(--glow)}
+
+/* REVEAL on scroll */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .8s,transform .8s}
+.reveal.in{opacity:1;transform:none}
+.reveal-d1{transition-delay:.1s}
+.reveal-d2{transition-delay:.2s}
+.reveal-d3{transition-delay:.3s}
+.reveal-d4{transition-delay:.4s}
+
+/* KEYFRAMES */
+@keyframes riseIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes beam{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.3;transform:scaleY(.5)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes drift{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}
+
+/* divider */
+.divider{width:100%;height:1px;background:var(--border);position:relative;z-index:1}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="prog"></div>
+<canvas id="gc"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Cosmos</div>
+  <ul class="nav-links">
+    <li><a href="#galaxies">Galaxies</a></li>
+    <li><a href="#constellations">Constellations</a></li>
+    <li><a href="#nebulae">Nebulae</a></li>
+    <li><a href="#phenomena">Phenomena</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-tag">✦ A Field Guide to the Universe</p>
+  <h1 class="hero-title">
+    <span class="word1">THE</span>
+    <span class="word2">Cosmos</span>
+  </h1>
+  <p class="hero-desc">A website that shows basic information about the universe. Made by Elvin Pio</p>
+  <div class="hero-scroll">
+    <span>Begin the journey</span>
+    <div class="scroll-beam"></div>
+  </div>
+</section>
+
+<!-- COUNTER STRIP -->
+<div class="counter-strip reveal">
+  <div class="count-item">
+    <div class="count-num"><em>2</em> trillion</div>
+    <div class="count-sub">Estimated galaxies in the observable universe</div>
+  </div>
+  <div class="count-item">
+    <div class="count-num"><em>88</em></div>
+    <div class="count-sub">IAU-recognized constellations</div>
+  </div>
+  <div class="count-item">
+    <div class="count-num"><em>4.5</em> bn yrs</div>
+    <div class="count-sub">Age of our solar system</div>
+  </div>
+  <div class="count-item">
+    <div class="count-num"><em>13.8</em> bn yrs</div>
+    <div class="count-sub">Age of the observable universe</div>
+  </div>
+</div>
+
+<!-- GALAXIES -->
+<section class="section" id="galaxies">
+  <div class="sec-header reveal">
+    <div class="sec-label">Chapter 01</div>
+    <h2 class="sec-title">The Architecture of <em>Galaxies</em></h2>
+  </div>
+  <div class="galaxy-grid">
+
+    <div class="galaxy-card accent wide reveal">
+      <div class="card-num">00 — Overview</div>
+      <span class="card-glyph">🌌</span>
+      <h3 class="card-title">What is a Galaxy?</h3>
+      <p class="card-body">Galaxies are vast gravitational systems of stars, stellar remnants, interstellar gas, dust, and dark matter. There are estimated to be between 200 billion and 2 trillion galaxies in the observable universe. Most galaxies span 1,000 to 100,000 parsecs in diameter and are separated by distances in the order of millions of parsecs. They are classified primarily by visual shape into spirals, ellipticals, lenticulars, and irregulars — a scheme devised by Edwin Hubble in 1926 and laid out in what astronomers call the Hubble Tuning Fork diagram.</p>
+      <span class="card-source">Source: <a href="https://en.wikipedia.org/wiki/Galaxy" target="_blank">Wikipedia — Galaxy</a> · <a href="https://astrobackyard.com/types-of-galaxies/" target="_blank">AstroBackyard</a></span>
+    </div>
+
+    <div class="galaxy-card reveal reveal-d1">
+      <div class="card-num">01 — Spiral</div>
+      <span class="card-glyph">🌀</span>
+      <h3 class="card-title">Spiral Galaxies</h3>
+      <p class="card-body">Approximately 60% of all galaxies are spiral galaxies, making them home to the majority of stars in the universe. They possess a rotating disc with prominent spiral arms curving out from a dense central bulge. Our own Milky Way is a barred spiral — its central bar was confirmed by the Spitzer Space Telescope in 2005. Spiral arms are not fixed structures; stars pass through them as they travel their own orbits, like traffic on a highway median. The arms are density waves first modeled by C.C. Lin and Frank Shu in 1964.</p>
+      <span class="card-source">Source: <a href="https://esahubble.org/wordbank/spiral-galaxy/" target="_blank">ESA/Hubble — Spiral Galaxy</a> · <a href="https://en.wikipedia.org/wiki/Spiral_galaxy" target="_blank">Wikipedia — Spiral Galaxy</a></span>
+    </div>
+
+    <div class="galaxy-card reveal reveal-d2">
+      <div class="card-num">02 — Elliptical</div>
+      <span class="card-glyph">🥚</span>
+      <h3 class="card-title">Elliptical Galaxies</h3>
+      <p class="card-body">Ranging from perfectly spherical to highly elongated, elliptical galaxies are thought to represent the mature or elderly phase of galactic evolution. Unlike spirals, their stars orbit the core in random directions with no systematic rotation, making them difficult to analyze for dark matter content. They contain little gas and dust, and star formation is largely extinct within them. Scientists believe most ellipticals originate from collisions and mergers of spiral galaxies. The largest known galaxy of any type — IC 1101 — is an elliptical spanning over 4 million light-years.</p>
+      <span class="card-source">Source: <a href="https://science.nasa.gov/universe/galaxies/types/" target="_blank">NASA Science — Galaxy Types</a> · <a href="https://www.universeguide.com/fact/ellipticalgalaxy" target="_blank">Universe Guide</a></span>
+    </div>
+
+    <div class="galaxy-card reveal reveal-d1">
+      <div class="card-num">03 — Irregular</div>
+      <span class="card-glyph">☁️</span>
+      <h3 class="card-title">Irregular Galaxies</h3>
+      <p class="card-body">Irregular galaxies defy classification into any neat category — they appear as toothpicks, rings, clumps, or chaotic mashups. Their unusual forms are typically the result of gravitational tidal interactions with neighboring galaxies. They often host intense star formation because of their rich gas and dust content. The Large and Small Magellanic Clouds — the Milky Way's closest dwarf galactic companions, visible in the Southern Hemisphere — are two of the best-known examples. The Milky Way is currently in the process of consuming the Sagittarius Dwarf Elliptical Galaxy.</p>
+      <span class="card-source">Source: <a href="https://openstax.org/books/astronomy-2e/pages/26-2-types-of-galaxies" target="_blank">OpenStax Astronomy 2e</a> · <a href="http://astronomy.nmsu.edu/tharriso/ast110/class23.html" target="_blank">NMSU Astronomy</a></span>
+    </div>
+
+    <div class="galaxy-card reveal reveal-d2">
+      <div class="card-num">04 — Collision</div>
+      <span class="card-glyph">💥</span>
+      <h3 class="card-title">The Andromeda Collision</h3>
+      <p class="card-body">The Milky Way and the Andromeda Galaxy are approaching each other at 100–140 km/s. In approximately 4.3 billion years, the two may collide and ultimately merge over six billion years into a single large elliptical — or perhaps a large disk galaxy. Despite the violence implied, the chance of individual stars colliding is extremely low because of the vast distances between them. The resulting merged galaxy has been nicknamed "Milkdromeda." Our galaxy has collided and merged before — simulations suggest it merged with a large galaxy dubbed the Kraken roughly 11 billion years ago.</p>
+      <span class="card-source">Source: <a href="https://en.wikipedia.org/wiki/Milky_Way" target="_blank">Wikipedia — Milky Way</a> · <a href="https://astrobackyard.com/types-of-galaxies/" target="_blank">AstroBackyard</a></span>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONSTELLATIONS -->
+<section class="section" id="constellations">
+  <div class="sec-header reveal">
+    <div class="sec-label">Chapter 02</div>
+    <h2 class="sec-title">Myths Written in <em>Stars</em></h2>
+  </div>
+  <div class="const-layout">
+    <div class="const-list">
+
+      <div class="const-item reveal">
+        <div class="const-num">01</div>
+        <div>
+          <div class="const-name">Orion <em>— The Hunter</em></div>
+          <div class="const-fact">One of the most recognizable constellations in both hemispheres, Orion is anchored by three collinear stars forming his belt. It contains Betelgeuse — a red supergiant so large it could swallow the orbit of Mars — and the Orion Nebula (M42), a star-forming region visible to the naked eye. Greek mythology holds that Orion was a mighty giant who boasted he could slay any creature on Earth. Apollo tricked his sister Artemis into shooting him with an arrow, whereupon Orion was placed among the stars. Following Orion's belt leads directly to Sirius, the brightest star in the night sky.</div>
+          <span class="const-source">Source: <a href="https://www.mayodarkskypark.ie/discover/constellations/" target="_blank">Mayo Dark Sky Park</a> · <a href="https://study.com/academy/lesson/major-constellations-facts-names.html" target="_blank">Study.com</a></span>
+        </div>
+      </div>
+
+      <div class="const-item reveal reveal-d1">
+        <div class="const-num">02</div>
+        <div>
+          <div class="const-name">Ursa Major <em>— The Great Bear</em></div>
+          <div class="const-fact">The third largest constellation in the sky and the largest in the Northern Hemisphere, Ursa Major contains the famous Big Dipper asterism — seven bright stars used as a celestial navigation pointer toward Polaris. In Greek mythology it represents Callisto, a nymph transformed into a bear by Zeus's jealous wife Hera. Her son Arcas was later also transformed and placed in the sky beside her as Ursa Minor. The constellation hosts spectacular deep-sky objects including Bode's Galaxy (M81), the Cigar Galaxy (M82), and the Pinwheel Galaxy (M101).</div>
+          <span class="const-source">Source: <a href="https://www.constellation-guide.com/constellation-list/ursa-major-constellation/" target="_blank">Constellation Guide</a> · <a href="https://starregister.org/famous-constellations-and-their-mythology.php" target="_blank">Star Register</a></span>
+        </div>
+      </div>
+
+      <div class="const-item reveal reveal-d2">
+        <div class="const-num">03</div>
+        <div>
+          <div class="const-name">Cassiopeia <em>— The Seated Queen</em></div>
+          <div class="const-fact">Recognizable by its distinctive W or M shape (depending on its position in the sky), Cassiopeia is a circumpolar constellation visible year-round from the Northern Hemisphere. In mythology, Cassiopeia was the vain queen of Ethiopia who boasted she was more beautiful than the sea-nymphs. As punishment, she was placed in the sky forever rotating around the celestial pole — spending half her time uncomfortably upside-down on her throne. She is found by looking opposite the Big Dipper from Polaris.</div>
+          <span class="const-source">Source: <a href="https://mymodernmet.com/famous-constellations/" target="_blank">My Modern Met</a> · <a href="https://www.mayodarkskypark.ie/discover/constellations/" target="_blank">Mayo Dark Sky Park</a></span>
+        </div>
+      </div>
+
+      <div class="const-item reveal reveal-d3">
+        <div class="const-num">04</div>
+        <div>
+          <div class="const-name">Canis Major <em>— The Greater Dog</em></div>
+          <div class="const-fact">The home of Sirius — at magnitude −1.46, the brightest star visible from Earth — Canis Major is typically depicted as one of Orion's hunting dogs. In Greek myth it represents Laelaps, a divine dog given by Zeus to Europa, later passed to the Athenian princess Procris. When Laelaps was set to hunt the Teumessian fox (a fox that could never be caught), Zeus resolved the paradox by transforming both animals into stone and placing the dog among the stars. Sirius's annual heliacal rising was used by ancient Egyptians to predict the Nile flood.</div>
+          <span class="const-source">Source: <a href="https://mymodernmet.com/famous-constellations/" target="_blank">My Modern Met</a> · <a href="https://www.constellation-guide.com/constellation-names/" target="_blank">Constellation Guide</a></span>
+        </div>
+      </div>
+
+      <div class="const-item reveal reveal-d4">
+        <div class="const-num">05</div>
+        <div>
+          <div class="const-name">Taurus <em>— The Bull</em></div>
+          <div class="const-fact">One of the oldest recorded constellations, Taurus lies adjacent to Orion and is identified by the bright red-orange giant Aldebaran and the Pleiades star cluster. It is a zodiacal constellation — one of twelve through which the Sun appears to pass during the year. The Crab Nebula (M1), the remnant of a supernova explosion observed in 1054 CE, lies within Taurus. Its central pulsar spins 30 times per second, powering the nebula's eerie blue inner glow with a wind of electrons moving near the speed of light.</div>
+          <span class="const-source">Source: <a href="https://study.com/academy/lesson/major-constellations-facts-names.html" target="_blank">Study.com</a> · <a href="https://space-facts.com/nebulae/" target="_blank">Space Facts</a></span>
+        </div>
+      </div>
+
+    </div>
+    <!-- Animated star map -->
+    <div class="starmap-wrap reveal">
+      <div class="starmap-label">Interactive Star Map — hover to explore</div>
+      <canvas id="starmap" width="500" height="500"></canvas>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- NEBULAE -->
+<section class="section" id="nebulae">
+  <div class="sec-header reveal">
+    <div class="sec-label">Chapter 03</div>
+    <h2 class="sec-title">Cosmic <em>Nurseries</em> &amp; Tombs</h2>
+  </div>
+  <div class="neb-grid">
+
+    <div class="neb-card em reveal">
+      <div class="neb-type">Emission Nebula</div>
+      <div class="neb-name">The Orion Nebula (M42)</div>
+      <div class="neb-body">A stellar nursery 1,500 light-years from Earth and the only nebula visible to the naked eye from the Northern Hemisphere. At its heart sits the Trapezium — four massive young stars only a few hundred thousand years old — whose ultraviolet radiation illuminates the entire cloud and carves cavities in the gas, disrupting the formation of hundreds of smaller stars nearby. It spans 24 light-years and contains over 700 newborn stars and brown dwarfs.</div>
+      <span class="neb-source">Source: <a href="https://science.nasa.gov/mission/hubble/science/universe-uncovered/hubble-nebulae/" target="_blank">NASA/Hubble — Nebulae</a></span>
+    </div>
+
+    <div class="neb-card sup reveal reveal-d1">
+      <div class="neb-type">Supernova Remnant</div>
+      <div class="neb-name">The Crab Nebula (M1)</div>
+      <div class="neb-body">The expanding debris of a supernova explosion witnessed by Chinese and Arab astronomers on July 4, 1054 CE. At its center spins the Crab Pulsar — a neutron star rotating 30 times per second — powering the nebula's blue interior glow with electrons whirling at nearly the speed of light around intense magnetic field lines. The orange filaments are tattered hydrogen-rich remnants of the progenitor star, flung outward at 9,000–25,000 miles per second.</div>
+      <span class="neb-source">Source: <a href="https://science.nasa.gov/mission/hubble/science/universe-uncovered/hubble-nebulae/" target="_blank">NASA/Hubble</a> · <a href="https://space-facts.com/nebulae/" target="_blank">Space Facts</a></span>
+    </div>
+
+    <div class="neb-card plan reveal reveal-d2">
+      <div class="neb-type">Planetary Nebula</div>
+      <div class="neb-name">The Helix Nebula (NGC 7293)</div>
+      <div class="neb-body">The closest known nebula to Earth at just 700 light-years, the Helix Nebula is a planetary nebula — not actually related to any planet, but named for its round appearance through early telescopes. It formed as a Sun-like star expelled its outer layers in its death throes, leaving behind only a slowly cooling white dwarf at its center. Our own Sun is expected to follow this same path in several billion years, eventually puffing into a red giant before exhaling its layers into a similar glowing shroud.</div>
+      <span class="neb-source">Source: <a href="https://spaceplace.nasa.gov/nebula/en/" target="_blank">NASA Space Place</a> · <a href="https://science.nasa.gov/universe/stars/" target="_blank">NASA Science — Stars</a></span>
+    </div>
+
+    <div class="neb-card em reveal reveal-d1">
+      <div class="neb-type">Stellar Nursery</div>
+      <div class="neb-name">Pillars of Creation (M16)</div>
+      <div class="neb-body">Part of the Eagle Nebula, these towering columns of gas and dust — made famous by a 1995 Hubble image — are regions of intense star formation. The James Webb Space Telescope revealed in 2022 that inside their wispy columns, newborn stars were completely hidden from visible light. Webb's infrared view pierced the obscuring dust, showing stellar nurseries in unprecedented detail. In the optical image, blue represents oxygen, red is sulfur, and green signals nitrogen and hydrogen.</div>
+      <span class="neb-source">Source: <a href="https://science.nasa.gov/universe/decoding-nebulae/" target="_blank">NASA — Decoding Nebulae</a></span>
+    </div>
+
+    <div class="neb-card ref reveal reveal-d2">
+      <div class="neb-type">Reflection Nebula</div>
+      <div class="neb-name">Witch Head Nebula (IC 2118)</div>
+      <div class="neb-body">Unlike emission nebulae that generate their own light, reflection nebulae are illuminated by nearby stars, scattering their light off interstellar dust grains. Because dust grains preferentially reflect blue light — the same reason Earth's sky is blue — reflection nebulae have a characteristic blue cast. The Witch Head Nebula in Eridanus is lit by the brilliant blue-white star Rigel in Orion. Reflection nebulae often indicate the presence of young, hot stars and are frequently found in regions of active star formation.</div>
+      <span class="neb-source">Source: <a href="https://science.nasa.gov/universe/decoding-nebulae/" target="_blank">NASA — Decoding Nebulae</a> · <a href="https://www.spacecentre.co.uk/news/space-now-blog/what-is-a-nebula/" target="_blank">National Space Centre</a></span>
+    </div>
+
+    <div class="neb-card sup reveal reveal-d3">
+      <div class="neb-type">Dark Nebula</div>
+      <div class="neb-name">Horsehead Nebula (B33)</div>
+      <div class="neb-body">Dark nebulae contain such a dense concentration of gas and dust that they absorb the light of everything behind them, appearing as silhouettes against brighter emission regions. The Horsehead Nebula in Orion — catalogued as Barnard 33 — is one of the most photographed objects in the sky, its unmistakable equine profile backlit by the glowing emission nebula IC 434. Stars are actively forming within it; as they mature they will gradually erode their birth cloud from within, eventually consuming it entirely.</div>
+      <span class="neb-source">Source: <a href="https://space-facts.com/nebulae/" target="_blank">Space Facts</a> · <a href="https://kids.britannica.com/students/article/nebula/601325" target="_blank">Britannica Kids</a></span>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PHENOMENA -->
+<section class="section" id="phenomena">
+  <div class="sec-header reveal">
+    <div class="sec-label">Chapter 04</div>
+    <h2 class="sec-title">Extraordinary <em>Phenomena</em></h2>
+  </div>
+
+  <div class="phenom-row reveal">
+    <div class="phenom-art">
+      <canvas class="phenom-canvas" id="bhCanvas" width="400" height="400"></canvas>
+    </div>
+    <div class="phenom-text">
+      <div class="phenom-label">01 — Singularities</div>
+      <h3 class="phenom-title">Black <em>Holes</em></h3>
+      <p class="phenom-body">A black hole is the endpoint of a star with more than roughly 20 times the mass of our Sun. When such a star exhausts its nuclear fuel, its iron core collapses catastrophically and rebounds in a supernova explosion, leaving behind an infinitely dense point — a singularity — wrapped in an event horizon from which nothing, not even light, can escape. At the center of most large galaxies, including the Milky Way, sits a supermassive black hole. Ours — Sagittarius A* — contains approximately 4 million solar masses. Gas and dust spiraling into the black hole form an accretion disk that can outshine the entire host galaxy, creating a quasar.</p>
+      <span class="phenom-source">Source: <a href="https://science.nasa.gov/universe/stars/" target="_blank">NASA Science — Stars</a> · <a href="https://science.nasa.gov/universe/galaxies/types/" target="_blank">NASA — Galaxy Types</a></span>
+    </div>
+  </div>
+
+  <div class="phenom-row reveal">
+    <div class="phenom-art">
+      <canvas class="phenom-canvas" id="nsCanvas" width="400" height="400"></canvas>
+    </div>
+    <div class="phenom-text">
+      <div class="phenom-label">02 — Remnant Stars</div>
+      <h3 class="phenom-title">Neutron <em>Stars</em></h3>
+      <p class="phenom-body">When a star between 7 and 19 solar masses dies in a supernova, what remains is a neutron star — arguably the most exotic object we can directly observe. Compressed to a sphere roughly the diameter of a city while retaining up to twice the Sun's mass, neutron star material is so dense that a single sugar cube of it would weigh about 1 trillion kilograms on Earth — approximately the mass of a mountain. Many neutron stars are detected as pulsars, spinning many times per second and sweeping beams of radiation across the sky like cosmic lighthouses. Some neutron stars — magnetars — possess magnetic fields a thousand times stronger still, capable of causing starquakes that send gamma ray flashes thousands of light-years.</p>
+      <span class="phenom-source">Source: <a href="https://science.nasa.gov/universe/neutron-stars-are-weird/" target="_blank">NASA Science — Neutron Stars Are Weird</a></span>
+    </div>
+  </div>
+
+  <div class="phenom-row reveal">
+    <div class="phenom-art">
+      <canvas class="phenom-canvas" id="supernovaCanvas" width="400" height="400"></canvas>
+    </div>
+    <div class="phenom-text">
+      <div class="phenom-label">03 — Stellar Death</div>
+      <h3 class="phenom-title">Super<em>novae</em></h3>
+      <p class="phenom-body">A supernova is one of the most energetic events in the universe. In the core-collapse variety, a massive star runs out of nuclear fuel and its iron core collapses in milliseconds, triggering a shockwave that rips through the star's outer layers. The initial flash can outshine the star's entire host galaxy for weeks. Supernova remnants — the expanding debris clouds — can be studied for millennia and are responsible for seeding the interstellar medium with heavy elements forged in the star's core: carbon, oxygen, iron, gold, uranium. Every atom heavier than iron in your body was forged in such an explosion. We are, in the most literal sense, made of stardust.</p>
+      <span class="phenom-source">Source: <a href="https://science.nasa.gov/mission/hubble/science/universe-uncovered/hubble-nebulae/" target="_blank">NASA/Hubble — Nebulae</a> · <a href="https://www.spacecentre.co.uk/news/space-now-blog/what-is-a-nebula/" target="_blank">National Space Centre</a></span>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  <span class="footer-star">✦</span>
+  <p>
+    COSMOS — A Field Guide to the Universe<br>
+    Content sourced from <a href="https://science.nasa.gov" target="_blank">NASA Science</a>, <a href="https://esahubble.org" target="_blank">ESA/Hubble</a>, <a href="https://en.wikipedia.org/wiki/Galaxy" target="_blank">Wikipedia</a>, <a href="https://openstax.org" target="_blank">OpenStax Astronomy 2e</a>,<br>
+    <a href="https://www.constellation-guide.com" target="_blank">Constellation Guide</a>, <a href="https://space-facts.com" target="_blank">Space Facts</a>, and <a href="https://astrobackyard.com" target="_blank">AstroBackyard</a>.<br><br>
+    All scientific facts cited inline. This is an educational reference — no original research.
+  </p>
+</footer>
+
+<script>
+// ── CURSOR ──────────────────────────────────────────────────────────────────
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+function animCursor(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cur.style.left=mx+'px';cur.style.top=my+'px';ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animCursor)}
+animCursor();
+
+// ── SCROLL PROGRESS ──────────────────────────────────────────────────────────
+const prog=document.getElementById('prog');
+window.addEventListener('scroll',()=>{const p=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;prog.style.width=p+'%'});
+
+// ── GALAXY BACKGROUND CANVAS ────────────────────────────────────────────────
+const gc=document.getElementById('gc'),ctx=gc.getContext('2d');
+let W,H,stars=[],t=0;
+const N_ARMS=4,N_STARS=380,N_CORE=70,N_SCATTER=90;
+function rand(a,b){return Math.random()*(b-a)+a}
+function resize(){W=gc.width=window.innerWidth;H=gc.height=window.innerHeight;buildGalaxy()}
+function buildGalaxy(){
+  stars=[];
+  for(let a=0;a<N_ARMS;a++){
+    const base=(a/N_ARMS)*Math.PI*2;
+    const cnt=Math.floor((N_STARS-N_CORE)/N_ARMS);
+    for(let i=0;i<cnt;i++){
+      const t=i/cnt,sp=rand(-.38,.38);
+      const r=t*Math.min(W,H)*.43+rand(0,18);
+      const ang=base+t*Math.PI*3.6+sp;
+      const x=W/2+Math.cos(ang)*r,y=H/2+Math.sin(ang)*r*.46;
+      stars.push({x,y,ox:x,oy:y,sz:rand(.3,t<.3?2:1.2),hue:rand(200,310),al:rand(.2,.9),sp:rand(.0004,.0013),ph:rand(0,Math.PI*2),tw:rand(.003,.009)});
+    }
+  }
+  for(let i=0;i<N_CORE;i++){
+    const r=rand(0,Math.min(W,H)*.075),a=rand(0,Math.PI*2);
+    const x=W/2+Math.cos(a)*r,y=H/2+Math.sin(a)*r*.46;
+    stars.push({x,y,ox:x,oy:y,sz:rand(.6,2.4),hue:rand(220,290),al:rand(.5,1),sp:rand(.0002,.0007),ph:rand(0,Math.PI*2),tw:rand(.002,.005),core:1});
+  }
+  for(let i=0;i<N_SCATTER;i++){
+    const x=rand(0,W),y=rand(0,H);
+    stars.push({x,y,ox:x,oy:y,sz:rand(.15,.65),hue:rand(180,320),al:rand(.08,.35),sp:rand(.0001,.0003),ph:rand(0,Math.PI*2),tw:rand(.001,.004),sc:1});
+  }
+}
+function drawGalaxy(){
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.min(W,H)*.38);
+  g.addColorStop(0,'rgba(110,70,200,0.14)');
+  g.addColorStop(.5,'rgba(60,40,140,0.06)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  t+=.45;
+  for(const s of stars){
+    const tw=.72+.28*Math.sin(t*s.tw*60+s.ph);
+    const dx=s.ox-mx,dy=s.oy-my,d=Math.sqrt(dx*dx+dy*dy),rep=130;
+    if(d<rep){const f=(rep-d)/rep;s.x=s.ox+(dx/d)*f*44;s.y=s.oy+(dy/d)*f*44}
+    else{s.x+=(s.ox-s.x)*.04;s.y+=(s.oy-s.y)*.04}
+    if(!s.sc){
+      const rx=s.ox-W/2,ry=s.oy-H/2;
+      const ang=Math.atan2(ry,rx),rad=Math.sqrt(rx*rx+ry*ry),rot=s.sp*t;
+      s.ox=W/2+Math.cos(ang+rot)*rad;s.oy=H/2+Math.sin(ang+rot)*rad*.46;
+    }
+    ctx.save();ctx.globalAlpha=tw;
+    ctx.fillStyle=`hsla(${s.hue},65%,78%,${s.al})`;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.sz,0,Math.PI*2);ctx.fill();
+    if(s.sz>1.3){
+      ctx.globalAlpha=tw*.22;
+      const gg=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.sz*6);
+      gg.addColorStop(0,`hsla(${s.hue},70%,80%,1)`);gg.addColorStop(1,'transparent');
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(s.x,s.y,s.sz*6,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+  requestAnimationFrame(drawGalaxy);
+}
+window.addEventListener('resize',resize);
+resize();drawGalaxy();
+
+// ── SCROLL REVEAL ────────────────────────────────────────────────────────────
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── GALAXY CARD MAGNETIC ────────────────────────────────────────────────────
+document.querySelectorAll('.galaxy-card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+// ── STAR MAP ─────────────────────────────────────────────────────────────────
+(function(){
+  const sm=document.getElementById('starmap'),sc=sm.getContext('2d');
+  const W2=500,H2=500;
+  // Named stars for major constellations
+  const consts=[
+    {name:'Orion',color:'#c4b5fd',stars:[
+      {x:250,y:180,r:3.5,n:'Betelgeuse'},{x:310,y:200,r:2,n:'Bellatrix'},
+      {x:260,y:240,r:2,n:'ε'},{x:250,y:252,r:2.5,n:'Alnilam'},{x:240,y:265,r:2,n:'ε'},
+      {x:220,y:310,r:1.5,n:'Saiph'},{x:285,y:315,r:3,n:'Rigel'}
+    ],lines:[[0,1],[0,2],[1,3],[2,3],[3,4],[4,5],[4,6]]},
+    {name:'Ursa Major',color:'#34d399',stars:[
+      {x:60,y:80,r:2.5,n:'Dubhe'},{x:85,y:100,r:2,n:'Merak'},
+      {x:110,y:90,r:2,n:'Phecda'},{x:130,y:70,r:2.5,n:'Megrez'},
+      {x:160,y:60,r:2,n:'Alioth'},{x:185,y:50,r:2,n:'Mizar'},{x:210,y:40,r:2,n:'Alkaid'}
+    ],lines:[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]]},
+    {name:'Cassiopeia',color:'#fbbf24',stars:[
+      {x:380,y:75,r:2.5,n:'ε'},{x:410,y:55,r:2,n:'δ'},
+      {x:435,y:70,r:2.5,n:'γ'},{x:460,y:50,r:2,n:'α'},{x:480,y:68,r:2,n:'β'}
+    ],lines:[[0,1],[1,2],[2,3],[3,4]]},
+    {name:'Canis Major',color:'#f472b6',stars:[
+      {x:180,y:380,r:4,n:'Sirius'},{x:210,y:400,r:1.5,n:'ε'},
+      {x:240,y:420,r:1.5,n:'ζ'},{x:160,y:410,r:1.5,n:'δ'},{x:175,y:440,r:1.5,n:'η'}
+    ],lines:[[0,1],[1,2],[0,3],[3,4]]},
+  ];
+  // bg stars
+  const bgS=[];
+  for(let i=0;i<220;i++)bgS.push({x:Math.random()*W2,y:Math.random()*H2,r:Math.random()*.9+.2,al:Math.random()*.5+.1,ph:Math.random()*Math.PI*2});
+  let smouse={x:-999,y:-999},smT=0;
+  sm.addEventListener('mousemove',e=>{const r=sm.getBoundingClientRect();smouse.x=(e.clientX-r.left)/r.width*W2;smouse.y=(e.clientY-r.top)/r.height*H2});
+  sm.addEventListener('mouseleave',()=>{smouse={x:-999,y:-999}});
+  function drawMap(){
+    smT+=.008;
+    sc.clearRect(0,0,W2,H2);
+    // background
+    for(const s of bgS){
+      const al=s.al*(0.7+0.3*Math.sin(smT*2+s.ph));
+      sc.globalAlpha=al;sc.fillStyle='#f4f0e8';
+      sc.beginPath();sc.arc(s.x,s.y,s.r,0,Math.PI*2);sc.fill();
+    }
+    // constellations
+    for(const c of consts){
+      const stars=c.stars;
+      // lines
+      sc.globalAlpha=.3;sc.strokeStyle=c.color;sc.lineWidth=.6;
+      for(const [a,b] of c.lines){
+        sc.beginPath();sc.moveTo(stars[a].x,stars[a].y);sc.lineTo(stars[b].x,stars[b].y);sc.stroke();
+      }
+      // stars
+      for(const s of stars){
+        const dx=smouse.x-s.x,dy=smouse.y-s.y,dist=Math.sqrt(dx*dx+dy*dy);
+        const hover=dist<30;
+        const pulse=1+.3*Math.sin(smT*3+s.x*.05);
+        const r=s.r*(hover?2.2:pulse);
+        sc.globalAlpha=hover?1:.85;
+        // glow
+        const gg=sc.createRadialGradient(s.x,s.y,0,s.x,s.y,r*5);
+        gg.addColorStop(0,c.color);gg.addColorStop(1,'transparent');
+        sc.fillStyle=gg;sc.beginPath();sc.arc(s.x,s.y,r*5,0,Math.PI*2);sc.fill();
+        // core
+        sc.globalAlpha=1;sc.fillStyle=hover?'#fff':c.color;
+        sc.beginPath();sc.arc(s.x,s.y,r,0,Math.PI*2);sc.fill();
+        // label on hover
+        if(hover&&s.n){
+          sc.globalAlpha=1;sc.fillStyle='rgba(244,240,232,0.85)';
+          sc.font='11px DM Mono, monospace';sc.textAlign='left';
+          sc.fillText(s.n,s.x+8,s.y-6);
+        }
+      }
+      // constellation label
+      const cx=stars.reduce((a,s)=>a+s.x,0)/stars.length;
+      const cy=Math.min(...stars.map(s=>s.y))-16;
+      sc.globalAlpha=.45;sc.fillStyle=c.color;
+      sc.font='9px DM Mono, monospace';sc.textAlign='center';
+      sc.fillText(c.name,cx,cy);
+    }
+    sc.globalAlpha=1;
+    requestAnimationFrame(drawMap);
+  }
+  drawMap();
+})();
+
+// ── BLACK HOLE CANVAS ────────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('bhCanvas'),cx=cv.getContext('2d');
+  const W=400,H=400,CX=200,CY=200;
+  let bh_t=0;
+  const accDisk=[];
+  for(let i=0;i<180;i++){
+    const ang=Math.random()*Math.PI*2;
+    const r=rand(62,130);
+    accDisk.push({ang,r,speed:rand(.006,.018)*(r<90?.8:1.2),al:rand(.4,.9),hue:rand(15,55),sz:rand(.5,2.2)});
+  }
+  function drawBH(){
+    bh_t+=.012;
+    cx.clearRect(0,0,W,H);
+    // outer glow
+    for(let i=3;i>=1;i--){
+      const g=cx.createRadialGradient(CX,CY,50,CX,CY,140*i/3);
+      g.addColorStop(0,'rgba(251,191,36,0.0)');
+      g.addColorStop(.6,'rgba(239,68,68,0.04)');
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      cx.fillStyle=g;cx.beginPath();cx.arc(CX,CY,140*i/3,0,Math.PI*2);cx.fill();
+    }
+    // accretion disk
+    for(const p of accDisk){
+      p.ang+=p.speed;
+      const x=CX+Math.cos(p.ang)*p.r,y=CY+Math.sin(p.ang)*p.r*.35;
+      const brightness=p.r<90?1:0.7;
+      cx.globalAlpha=p.al*brightness*(0.7+0.3*Math.sin(bh_t*4+p.ang));
+      cx.fillStyle=`hsla(${p.hue},95%,65%,1)`;
+      cx.beginPath();cx.arc(x,y,p.sz,0,Math.PI*2);cx.fill();
+    }
+    // shadow clipping (event horizon)
+    cx.globalAlpha=1;
+    cx.fillStyle='#0b0915';
+    cx.beginPath();cx.arc(CX,CY,50,0,Math.PI*2);cx.fill();
+    // photon ring
+    cx.globalAlpha=0.7+.3*Math.sin(bh_t*1.5);
+    const pg=cx.createRadialGradient(CX,CY,48,CX,CY,62);
+    pg.addColorStop(0,'rgba(251,191,36,0)');
+    pg.addColorStop(.5,'rgba(251,191,36,0.45)');
+    pg.addColorStop(1,'rgba(251,191,36,0)');
+    cx.strokeStyle=pg;cx.lineWidth=3;
+    cx.beginPath();cx.arc(CX,CY,55,0,Math.PI*2);cx.stroke();
+    cx.globalAlpha=1;
+    requestAnimationFrame(drawBH);
+  }
+  drawBH();
+})();
+
+// ── NEUTRON STAR / PULSAR ────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('nsCanvas'),cx=cv.getContext('2d');
+  const W=400,H=400,CX=200,CY=200;
+  let ns_t=0;
+  const surface=[];
+  for(let i=0;i<300;i++){
+    const a=Math.random()*Math.PI*2,r=rand(0,28);
+    surface.push({a,r,hue:rand(180,240),al:rand(.5,1)});
+  }
+  function drawNS(){
+    ns_t+=.018;
+    cx.clearRect(0,0,W,H);
+    // Jet beams
+    const beamPhase=ns_t*2.5;
+    const jx1=CX+Math.cos(beamPhase)*2,jy1=CY+Math.sin(beamPhase)*2;
+    for(let len=1;len<=5;len++){
+      const fade=1-len/6;
+      cx.globalAlpha=fade*.25;
+      cx.strokeStyle='rgba(52,211,153,1)';cx.lineWidth=len*3;
+      cx.beginPath();cx.moveTo(jx1,jy1);cx.lineTo(jx1,10);cx.stroke();
+      cx.beginPath();cx.moveTo(jx1,jy1);cx.lineTo(jx1,390);cx.stroke();
+    }
+    // Magnetic field lines
+    for(let i=0;i<8;i++){
+      const a=(i/8)*Math.PI*2+ns_t*.15;
+      cx.globalAlpha=.12;cx.strokeStyle='#60a5fa';cx.lineWidth=1;
+      cx.beginPath();
+      for(let r=35;r<160;r+=2){
+        const theta=a+Math.sin(r*.04)*0.6;
+        const x2=CX+Math.cos(theta)*r,y2=CY+Math.sin(theta)*r*.55;
+        r===35?cx.moveTo(x2,y2):cx.lineTo(x2,y2);
+      }
+      cx.stroke();
+    }
+    // Pulsing glow
+    const glowR=42+6*Math.sin(ns_t*8);
+    const gg=cx.createRadialGradient(CX,CY,0,CX,CY,glowR+30);
+    gg.addColorStop(0,'rgba(52,211,153,0.35)');
+    gg.addColorStop(.6,'rgba(96,165,250,0.1)');
+    gg.addColorStop(1,'rgba(0,0,0,0)');
+    cx.globalAlpha=1;cx.fillStyle=gg;cx.beginPath();cx.arc(CX,CY,glowR+30,0,Math.PI*2);cx.fill();
+    // Surface
+    for(const p of surface){
+      const x=CX+Math.cos(p.a+ns_t*.8)*p.r,y=CY+Math.sin(p.a+ns_t*.8)*p.r*.55;
+      cx.globalAlpha=p.al;cx.fillStyle=`hsla(${p.hue},80%,75%,1)`;
+      cx.beginPath();cx.arc(x,y,.8,0,Math.PI*2);cx.fill();
+    }
+    cx.globalAlpha=1;
+    cx.fillStyle='#a5f3d0';
+    cx.beginPath();cx.arc(CX,CY,28,0,Math.PI*2);cx.fill();
+    requestAnimationFrame(drawNS);
+  }
+  drawNS();
+})();
+
+// ── SUPERNOVA ────────────────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('supernovaCanvas'),cx=cv.getContext('2d');
+  const W=400,H=400,CX=200,CY=200;
+  let sv_t=0;
+  const ejecta=[];
+  for(let i=0;i<250;i++){
+    const a=Math.random()*Math.PI*2;
+    const spd=rand(.3,2.2);
+    ejecta.push({a,spd,r:rand(0,30),hue:rand(0,60),al:rand(.4,.9),sz:rand(.4,1.8),drift:rand(-.01,.01)});
+  }
+  const filaments=[];
+  for(let i=0;i<40;i++){
+    const a=Math.random()*Math.PI*2,len=rand(40,120),wid=rand(.5,2);
+    filaments.push({a,len,wid,hue:rand(0,40),al:rand(.2,.7)});
+  }
+  function drawSV(){
+    sv_t+=.01;
+    cx.clearRect(0,0,W,H);
+    // outer nebula glow rings
+    for(let ring=3;ring>=1;ring--){
+      const rr=55+ring*30+20*Math.sin(sv_t*1.5+ring);
+      const g=cx.createRadialGradient(CX,CY,rr*.6,CX,CY,rr);
+      g.addColorStop(0,'rgba(239,68,68,0)');
+      g.addColorStop(.5,`rgba(${ring===3?'251,191,36':ring===2?'239,68,68':'96,165,250'},${.07-ring*.01})`);
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      cx.globalAlpha=1;cx.fillStyle=g;cx.beginPath();cx.arc(CX,CY,rr,0,Math.PI*2);cx.fill();
+    }
+    // filaments
+    for(const f of filaments){
+      const fa=f.a+sv_t*.04;
+      cx.globalAlpha=f.al*(0.6+0.4*Math.sin(sv_t*2+f.a));
+      cx.strokeStyle=`hsla(${f.hue},90%,65%,1)`;cx.lineWidth=f.wid;
+      cx.beginPath();
+      cx.moveTo(CX+Math.cos(fa)*25,CY+Math.sin(fa)*25);
+      cx.lineTo(CX+Math.cos(fa)*f.len,CY+Math.sin(fa)*f.len*.7);
+      cx.stroke();
+    }
+    // ejecta particles
+    for(const e of ejecta){
+      e.r+=e.spd*.15;e.a+=e.drift;
+      if(e.r>160)e.r=rand(0,10);
+      const fade=Math.max(0,1-e.r/150);
+      cx.globalAlpha=e.al*fade*(0.7+0.3*Math.sin(sv_t*5+e.a));
+      cx.fillStyle=`hsla(${e.hue},95%,70%,1)`;
+      cx.beginPath();cx.arc(CX+Math.cos(e.a)*e.r,CY+Math.sin(e.a)*e.r*.7,e.sz,0,Math.PI*2);cx.fill();
+    }
+    // core remnant
+    const cr=8+3*Math.sin(sv_t*6);
+    const cg=cx.createRadialGradient(CX,CY,0,CX,CY,cr+20);
+    cg.addColorStop(0,'rgba(255,255,255,1)');
+    cg.addColorStop(.3,'rgba(200,180,255,0.8)');
+    cg.addColorStop(1,'rgba(0,0,0,0)');
+    cx.globalAlpha=1;cx.fillStyle=cg;cx.beginPath();cx.arc(CX,CY,cr+20,0,Math.PI*2);cx.fill();
+    cx.globalAlpha=1;cx.fillStyle='white';cx.beginPath();cx.arc(CX,CY,cr,0,Math.PI*2);cx.fill();
+    requestAnimationFrame(drawSV);
+  }
+  drawSV();
+})();
+</script>
+</body>
+</html>
